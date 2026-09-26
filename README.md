@@ -21,7 +21,7 @@ The generated static site is written to `docs/` and is suitable for GitHub Pages
 
 - Two encounters: Wolf Pack and Goblin Patrol
 - Ten-card starter spellbook with no duplicate spells
-- Arcane Dart bound cantrip and Runic Bulwark once-per-battle ultimate
+- Arcane Dart bound cantrip and an ultimate slot that remains empty before the act boss
 - Mana, AP, Ward, Block, Armor break, Burning, Retain, Blind, and hidden intentions
 - Generalist's Focus starter relic
 
