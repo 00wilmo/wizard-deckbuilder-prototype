@@ -18,6 +18,7 @@ describe('combat foundation', () => {
     expect(state.player).toMatchObject({ hp: 70, mana: 12, ap: 3 });
     expect(state.hand).toHaveLength(5);
     expect(state.drawPile).toHaveLength(5);
+    expect(state.equippedUltimateId).toBeNull();
   });
 
   it('lets the bound cantrip be cast repeatedly while AP remains', () => {
@@ -77,20 +78,12 @@ describe('combat foundation', () => {
     expect(state.hand.some((item) => item.definitionId === 'aegis-script')).toBe(true);
   });
 
-  it('gives the strengthened Lesser Ward eight Ward', () => {
+  it('keeps the ultimate slot locked before the act boss', () => {
     const state = fresh();
-    state.hand = [card('lesser-ward')];
-    expect(playCard(state, 'test-lesser-ward').ok).toBe(true);
-    expect(state.player.ward).toBe(8);
+    expect(playUltimate(state).ok).toBe(false);
   });
 
-  it('keeps the wolf pack opening at twelve incoming damage', () => {
-    const state = fresh();
-    endTurn(state, steadyRandom);
-    expect(state.player.hp).toBe(58);
-  });
-
-  it('allows Runic Bulwark only once per battle and preserves Ward', () => {
+  it('allows an equipped Runic Bulwark only once per battle and preserves Ward', () => {
     const state = fresh();
     state.equippedUltimateId = 'runic-bulwark';
     expect(playUltimate(state).ok).toBe(true);
@@ -103,9 +96,16 @@ describe('combat foundation', () => {
     expect(state.player.ward).toBeGreaterThan(0);
   });
 
-  it('does not grant an ultimate before the act boss is defeated', () => {
+  it('uses the approved stronger starting Ward values', () => {
     const state = fresh();
-    expect(state.equippedUltimateId).toBeNull();
-    expect(playUltimate(state)).toEqual({ ok: false, message: 'No ultimate spell has been bound yet.' });
+    state.hand = [card('lesser-ward')];
+    expect(playCard(state, 'test-lesser-ward').ok).toBe(true);
+    expect(state.player.ward).toBe(8);
+  });
+
+  it('reduces the wolf pack opening to twelve damage before Ward', () => {
+    const state = fresh();
+    endTurn(state, steadyRandom);
+    expect(state.player.hp).toBe(58);
   });
 });
