@@ -16,8 +16,8 @@ export function shuffle<T>(items: T[], random: () => number = Math.random): T[] 
   return result;
 }
 
-function makeDeck(random: () => number): CardInstance[] {
-  return shuffle(startingDeck.map((definitionId, index) => ({ uid: uid('card', index), definitionId })), random);
+function makeDeck(random: () => number, deckIds: string[] = startingDeck): CardInstance[] {
+  return shuffle(deckIds.map((definitionId, index) => ({ uid: uid('card', index), definitionId })), random);
 }
 
 function makeEnemy(definitionId: string, index: number): EnemyState {
@@ -30,20 +30,33 @@ function makeEnemy(definitionId: string, index: number): EnemyState {
   };
 }
 
-export function createCombat(encounterId: string, random: () => number = Math.random): CombatState {
+export interface CombatSetup {
+  hp?: number;
+  maxHp?: number;
+  mana?: number;
+  maxMana?: number;
+  deckIds?: string[];
+}
+
+export function createCombat(
+  encounterId: string,
+  random: () => number = Math.random,
+  setup: CombatSetup = {},
+): CombatState {
   const encounter = encounters[encounterId] ?? encounters.wolves;
   const state: CombatState = {
     encounterId: encounter.id,
     turn: 1,
     phase: 'player',
     player: {
-      hp: 70, maxHp: 70, mana: 12, maxMana: 12, ap: 3, maxAp: 3,
+      hp: setup.hp ?? 70, maxHp: setup.maxHp ?? 70,
+      mana: setup.mana ?? 12, maxMana: setup.maxMana ?? 12, ap: 3, maxAp: 3,
       ward: 0, armor: 0, armorBreak: 0, burning: 0, blindTurns: 0,
       reactiveWard: 0, wardPersistTurns: 0, generalistTriggered: false, previousSchool: null,
     },
     enemies: encounter.enemies.map(makeEnemy),
-    drawPile: makeDeck(random), hand: [], discardPile: [], exhaustPile: [],
-    ultimateUsed: false, pendingChoice: null,
+    drawPile: makeDeck(random, setup.deckIds), hand: [], discardPile: [], exhaustPile: [],
+    equippedUltimateId: null, ultimateUsed: false, pendingChoice: null,
     log: [`${encounter.name} begins.`, 'Draw 5 spells.'],
   };
   drawCards(state, 5, random);
@@ -181,9 +194,9 @@ export function playCard(
       break;
     case 'cinder-lance': damageEnemy(state, target!, target!.burning > 0 ? 12 : 8); break;
     case 'forked-lightning': livingEnemies(state).forEach((enemy) => damageEnemy(state, enemy, 5)); break;
-    case 'lesser-ward': state.player.ward += 6; break;
-    case 'reactive-barrier': state.player.ward += 4; state.player.reactiveWard += 4; break;
-    case 'aegis-script': state.player.ward += 12; break;
+    case 'lesser-ward': state.player.ward += 8; break;
+    case 'reactive-barrier': state.player.ward += 5; state.player.reactiveWard += 5; break;
+    case 'aegis-script': state.player.ward += 14; break;
   }
 
   if (card.exhaust) state.exhaustPile.push(instance);
@@ -216,6 +229,7 @@ export function playCantrip(state: CombatState, targetUid: string): { ok: boolea
 }
 
 export function playUltimate(state: CombatState): { ok: boolean; message?: string } {
+  if (!state.equippedUltimateId) return { ok: false, message: 'No ultimate spell is bound yet.' };
   const card = cards['runic-bulwark'];
   if (state.ultimateUsed) return { ok: false, message: 'The ultimate has already been used this battle.' };
   if (!canPay(state, card.id)) return { ok: false, message: 'Not enough AP or Mana.' };
@@ -232,7 +246,7 @@ export function playUltimate(state: CombatState): { ok: boolean; message?: strin
 function executeIntent(state: CombatState, enemy: EnemyState): void {
   const intent = getIntent(enemy);
   if (intent.kind === 'attack') {
-    const packBonus = enemy.packHunter ? Math.max(0, livingEnemies(state).filter((other) => other.packHunter).length - 1) * 2 : 0;
+    const packBonus = enemy.packHunter ? Math.max(0, livingEnemies(state).filter((other) => other.packHunter).length - 1) : 0;
     let amount = (intent.amount ?? 0) + enemy.attackBonus + packBonus;
     if (enemy.chill > 0) {
       amount = Math.max(0, amount - enemy.chill);
