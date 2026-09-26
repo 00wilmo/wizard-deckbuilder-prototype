@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { availableNodeIds, completeNode, createRun, generateForestMap } from '../src/game/run';
+import { availableNodeIds, completeNode, createRun, generateForestMap, spellRewardChoices } from '../src/game/run';
 import { createCombat } from '../src/game/engine';
 
 describe('guided forest run', () => {
@@ -34,5 +34,14 @@ describe('guided forest run', () => {
     expect(combat.player.hp).toBe(43);
     expect(combat.player.mana).toBe(7);
     expect([...combat.hand, ...combat.drawPile]).toHaveLength(run.deck.length);
+  });
+
+  it('offers three deterministic new spells without duplicates', () => {
+    const run = createRun('dorian', 44);
+    const first = spellRewardChoices(run, 'r0-l1');
+    expect(first).toHaveLength(3);
+    expect(new Set(first).size).toBe(3);
+    expect(first.every((cardId) => !run.deck.includes(cardId))).toBe(true);
+    expect(spellRewardChoices(run, 'r0-l1')).toEqual(first);
   });
 });
