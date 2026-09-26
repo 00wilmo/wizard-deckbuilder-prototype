@@ -1,4 +1,4 @@
-import { startingDeck } from './data';
+import { spellRewardPool, startingDeck } from './data';
 
 export type ScholarId = 'dorian' | 'ilyra';
 export type MapNodeType = 'battle' | 'elite' | 'event' | 'rest' | 'research' | 'shop' | 'ruins' | 'boss';
@@ -136,6 +136,21 @@ export function availableNodeIds(run: RunState): string[] {
 export function completeNode(run: RunState, nodeId: string): void {
   if (!run.completedNodeIds.includes(nodeId)) run.completedNodeIds.push(nodeId);
   run.activeNodeId = null;
+}
+
+function stringSeed(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function spellRewardChoices(run: RunState, nodeId: string): string[] {
+  const available = spellRewardPool.filter((cardId) => !run.deck.includes(cardId));
+  const random = seededRandom(run.seed ^ stringSeed(nodeId));
+  return shuffle(available, random).slice(0, 3);
 }
 
 const STORAGE_KEY = 'unwritten-grimoire-run-v1';
