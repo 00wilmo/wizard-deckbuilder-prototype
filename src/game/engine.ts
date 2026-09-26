@@ -197,6 +197,19 @@ export function playCard(
     case 'lesser-ward': state.player.ward += 8; break;
     case 'reactive-barrier': state.player.ward += 5; state.player.reactiveWard += 5; break;
     case 'aegis-script': state.player.ward += 14; break;
+    case 'frost-thread': damageEnemy(state, target!, 6); target!.chill += 2; break;
+    case 'ember-volley': livingEnemies(state).forEach((enemy) => damageEnemy(state, enemy, 7)); break;
+    case 'searing-insight': {
+      const wasBurning = target!.burning > 0;
+      damageEnemy(state, target!, 7);
+      if (wasBurning) drawCards(state, 1, random);
+      break;
+    }
+    case 'steady-aegis': state.player.ward += 10; break;
+    case 'echoing-barrier': state.player.ward += 6; drawCards(state, 1, random); break;
+    case 'prismatic-sequence': damageEnemy(state, target!, 6); drawCards(state, 1, random); break;
+    case 'measured-recall': drawCards(state, 2, random); break;
+    case 'arcane-reservoir': state.player.mana = Math.min(state.player.maxMana, state.player.mana + 4); break;
   }
 
   if (card.exhaust) state.exhaustPile.push(instance);
