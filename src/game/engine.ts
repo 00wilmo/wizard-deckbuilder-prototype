@@ -43,7 +43,7 @@ export function createCombat(encounterId: string, random: () => number = Math.ra
     },
     enemies: encounter.enemies.map(makeEnemy),
     drawPile: makeDeck(random), hand: [], discardPile: [], exhaustPile: [],
-    ultimateUsed: false, pendingChoice: null,
+    equippedUltimateId: null, ultimateUsed: false, pendingChoice: null,
     log: [`${encounter.name} begins.`, 'Draw 5 spells.'],
   };
   drawCards(state, 5, random);
@@ -181,9 +181,9 @@ export function playCard(
       break;
     case 'cinder-lance': damageEnemy(state, target!, target!.burning > 0 ? 12 : 8); break;
     case 'forked-lightning': livingEnemies(state).forEach((enemy) => damageEnemy(state, enemy, 5)); break;
-    case 'lesser-ward': state.player.ward += 6; break;
-    case 'reactive-barrier': state.player.ward += 4; state.player.reactiveWard += 4; break;
-    case 'aegis-script': state.player.ward += 12; break;
+    case 'lesser-ward': state.player.ward += 8; break;
+    case 'reactive-barrier': state.player.ward += 5; state.player.reactiveWard += 5; break;
+    case 'aegis-script': state.player.ward += 14; break;
   }
 
   if (card.exhaust) state.exhaustPile.push(instance);
@@ -216,7 +216,9 @@ export function playCantrip(state: CombatState, targetUid: string): { ok: boolea
 }
 
 export function playUltimate(state: CombatState): { ok: boolean; message?: string } {
-  const card = cards['runic-bulwark'];
+  if (!state.equippedUltimateId) return { ok: false, message: 'No ultimate spell has been bound yet.' };
+  const card = cards[state.equippedUltimateId];
+  if (!card) return { ok: false, message: 'The bound ultimate could not be found.' };
   if (state.ultimateUsed) return { ok: false, message: 'The ultimate has already been used this battle.' };
   if (!canPay(state, card.id)) return { ok: false, message: 'Not enough AP or Mana.' };
   state.player.ap -= card.ap;
@@ -232,7 +234,7 @@ export function playUltimate(state: CombatState): { ok: boolean; message?: strin
 function executeIntent(state: CombatState, enemy: EnemyState): void {
   const intent = getIntent(enemy);
   if (intent.kind === 'attack') {
-    const packBonus = enemy.packHunter ? Math.max(0, livingEnemies(state).filter((other) => other.packHunter).length - 1) * 2 : 0;
+    const packBonus = enemy.packHunter ? Math.max(0, livingEnemies(state).filter((other) => other.packHunter).length - 1) : 0;
     let amount = (intent.amount ?? 0) + enemy.attackBonus + packBonus;
     if (enemy.chill > 0) {
       amount = Math.max(0, amount - enemy.chill);
