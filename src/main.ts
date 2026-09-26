@@ -12,6 +12,8 @@ import type { MapNode, RunState, ScholarId } from './game/run';
 import type { CardDefinition, CardInstance, CombatState, EnemyState } from './game/types';
 import { CombatScene } from './scene';
 
+// v0.4: illustrated battlefield and first-pass spell reward flow.
+
 type Selection = { kind: 'card'; uid: string } | { kind: 'cantrip' } | null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
