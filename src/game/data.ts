@@ -49,12 +49,50 @@ export const cards: Record<string, CardDefinition> = {
     id: 'runic-bulwark', name: 'Runic Bulwark', school: 'Warding', ap: 2, mana: 4,
     target: 'self', rules: 'Once per battle. Gain 16 Ward. Ward persists for the next 3 turns.', art: '⬢',
   },
+  'frost-thread': {
+    id: 'frost-thread', name: 'Frost Thread', school: 'Evocation', ap: 1, mana: 2,
+    target: 'enemy', rules: 'Deal 6 damage. Apply 2 Chill.', art: '❄',
+  },
+  'ember-volley': {
+    id: 'ember-volley', name: 'Ember Volley', school: 'Evocation', ap: 2, mana: 3,
+    target: 'all-enemies', rules: 'Deal 7 damage to all enemies.', art: '☄',
+  },
+  'searing-insight': {
+    id: 'searing-insight', name: 'Searing Insight', school: 'Evocation', ap: 1, mana: 3,
+    target: 'enemy', rules: 'Deal 7 damage. If Burning, draw 1 spell.', art: '◉',
+  },
+  'steady-aegis': {
+    id: 'steady-aegis', name: 'Steady Aegis', school: 'Warding', ap: 1, mana: 3,
+    target: 'self', rules: 'Gain 10 Ward.', art: '⬡',
+  },
+  'echoing-barrier': {
+    id: 'echoing-barrier', name: 'Echoing Barrier', school: 'Warding', ap: 1, mana: 2,
+    target: 'self', rules: 'Gain 6 Ward. Draw 1 spell.', art: '◎',
+  },
+  'prismatic-sequence': {
+    id: 'prismatic-sequence', name: 'Prismatic Sequence', school: 'Arcane', ap: 1, mana: 2,
+    target: 'enemy', rules: 'Deal 6 damage. Draw 1 spell.', art: '✧',
+  },
+  'measured-recall': {
+    id: 'measured-recall', name: 'Measured Recall', school: 'Arcane', ap: 0, mana: 2,
+    target: 'self', rules: 'Draw 2 spells. Exhaust.', exhaust: true, art: '↟',
+  },
+  'arcane-reservoir': {
+    id: 'arcane-reservoir', name: 'Arcane Reservoir', school: 'Arcane', ap: 1, mana: 0,
+    target: 'self', rules: 'Gain 4 Mana. Exhaust.', exhaust: true, art: '◈',
+  },
 };
 
 export const startingDeck = [
   'arcane-missile', 'mana-weave', 'quick-study', 'recollection',
   'kindle', 'cinder-lance', 'forked-lightning',
   'lesser-ward', 'reactive-barrier', 'aegis-script',
+];
+
+export const spellRewardPool = [
+  'frost-thread', 'ember-volley', 'searing-insight',
+  'steady-aegis', 'echoing-barrier',
+  'prismatic-sequence', 'measured-recall', 'arcane-reservoir',
 ];
 
 export const enemies: Record<string, EnemyDefinition> = {
