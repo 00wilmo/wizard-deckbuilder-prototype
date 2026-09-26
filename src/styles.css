@@ -171,7 +171,7 @@ button:focus-visible { outline: 3px solid #fff2a8; outline-offset: 3px; }
 .combat-deckbar { min-height:292px; display:grid; grid-template-columns:185px minmax(0,1fr) 190px; gap:9px; margin-top:10px; padding:9px; background:linear-gradient(#0b1725,#050c15); border:1px solid #45596b; border-radius:6px; }
 .combat-deckbar .hand-zone { margin:0; padding:7px; min-width:0; background:#07111bcc; }
 .combat-deckbar .hand { min-height:240px; gap:6px; justify-content:flex-start; overflow-x:auto; }
-.combat-deckbar .spell-card { width:clamp(110px,calc(20% - 4.8px),142px); min-width:clamp(110px,calc(20% - 4.8px),142px); flex-basis:clamp(110px,calc(20% - 4.8px),142px); height:232px; grid-template-rows:31px 69px 27px 1fr 22px; }
+.combat-deckbar .spell-card { width:112px; min-width:112px; flex-basis:112px; height:232px; grid-template-rows:31px 69px 27px 1fr 22px; }
 .combat-deckbar .card-art { font-size:36px; }.combat-deckbar .card-rules { font-size:12px; }
 .bound-slot-shell { display:flex; flex-direction:column; min-width:0; }
 .slot-heading { display:grid; place-items:center; height:31px; color:#7dcff5; font:600 10px 'Cinzel'; letter-spacing:.12em; }
