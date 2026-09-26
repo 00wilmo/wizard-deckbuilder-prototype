@@ -106,6 +106,7 @@ export interface CombatState {
   hand: CardInstance[];
   discardPile: CardInstance[];
   exhaustPile: CardInstance[];
+  equippedUltimateId: string | null;
   ultimateUsed: boolean;
   pendingChoice: PendingChoice | null;
   log: string[];
