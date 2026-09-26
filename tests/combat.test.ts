@@ -77,8 +77,22 @@ describe('combat foundation', () => {
     expect(state.hand.some((item) => item.definitionId === 'aegis-script')).toBe(true);
   });
 
+  it('gives the strengthened Lesser Ward eight Ward', () => {
+    const state = fresh();
+    state.hand = [card('lesser-ward')];
+    expect(playCard(state, 'test-lesser-ward').ok).toBe(true);
+    expect(state.player.ward).toBe(8);
+  });
+
+  it('keeps the wolf pack opening at twelve incoming damage', () => {
+    const state = fresh();
+    endTurn(state, steadyRandom);
+    expect(state.player.hp).toBe(58);
+  });
+
   it('allows Runic Bulwark only once per battle and preserves Ward', () => {
     const state = fresh();
+    state.equippedUltimateId = 'runic-bulwark';
     expect(playUltimate(state).ok).toBe(true);
     expect(state.player.ward).toBe(16);
     expect(state.player.wardPersistTurns).toBe(3);
@@ -87,5 +101,11 @@ describe('combat foundation', () => {
     endTurn(state, steadyRandom);
     expect(state.player.wardPersistTurns).toBe(2);
     expect(state.player.ward).toBeGreaterThan(0);
+  });
+
+  it('does not grant an ultimate before the act boss is defeated', () => {
+    const state = fresh();
+    expect(state.equippedUltimateId).toBeNull();
+    expect(playUltimate(state)).toEqual({ ok: false, message: 'No ultimate spell has been bound yet.' });
   });
 });
