@@ -16,7 +16,7 @@ app.innerHTML = `
   <div class="app-shell">
     <header class="topbar">
       <div class="brand-block">
-        <span class="eyebrow">Combat prototype · v0.2</span>
+        <span class="eyebrow">Combat prototype · v0.1</span>
         <h1>THE UNWRITTEN GRIMOIRE</h1>
       </div>
       <nav class="top-actions" aria-label="Prototype controls">
@@ -177,24 +177,18 @@ function renderPlayer(): void {
 
 function renderBoundCards(): void {
   const cantrip = cards['arcane-dart'];
+  const ultimate = cards['runic-bulwark'];
   const cantripDisabled = state.phase !== 'player' || state.player.ap < cantrip.ap || Boolean(state.pendingChoice);
-  const ultimate = state.equippedUltimateId ? cards[state.equippedUltimateId] : null;
-  const ultimateDisabled = !ultimate || state.phase !== 'player' || state.ultimateUsed || state.player.ap < ultimate.ap || state.player.mana < ultimate.mana || Boolean(state.pendingChoice);
-  const ultimateMarkup = ultimate ? `
-    <button class="bound-card ultimate-card" data-ultimate ${ultimateDisabled ? 'disabled' : ''}>
-      <span><small>${state.ultimateUsed ? 'ULTIMATE SPENT' : 'BOUND ULTIMATE'}</small><b>${ultimate.name}</b></span>
-      <span class="bound-effect">${ultimate.ap} AP · ${ultimate.mana} Mana · ${ultimate.rules}</span>
-    </button>` : `
-    <button class="bound-card ultimate-card locked-bound" disabled>
-      <span><small>ULTIMATE UNBOUND</small><b>Empty Binding</b></span>
-      <span class="bound-effect">Defeat the act boss to learn an ultimate</span>
-    </button>`;
+  const ultimateDisabled = state.phase !== 'player' || state.ultimateUsed || state.player.ap < ultimate.ap || state.player.mana < ultimate.mana || Boolean(state.pendingChoice);
   q<HTMLDivElement>('#bound-cards').innerHTML = `
     <button class="bound-card cantrip-card ${selection?.kind === 'cantrip' ? 'selected' : ''}" data-cantrip
       ${cantripDisabled ? 'disabled' : ''}>
       <span><small>BOUND CANTRIP</small><b>Arcane Dart</b></span><span class="bound-effect">1 AP · Deal 3 damage</span>
     </button>
-    ${ultimateMarkup}`;
+    <button class="bound-card ultimate-card" data-ultimate ${ultimateDisabled ? 'disabled' : ''}>
+      <span><small>${state.ultimateUsed ? 'ULTIMATE SPENT' : 'BOUND ULTIMATE'}</small><b>Runic Bulwark</b></span>
+      <span class="bound-effect">2 AP · 4 Mana · 16 Ward · Persist 3</span>
+    </button>`;
 }
 
 function renderHand(): void {
@@ -260,7 +254,7 @@ function openSpellbook(): void {
       <p>Ten unique spells. Bound spells are recorded separately and never enter the draw pile.</p>
       <div class="spellbook-grid">${deckCards}</div>
       <h3>Bound spells</h3>
-      <div class="bound-summary"><b>Arcane Dart</b><span>Repeatable cantrip</span><b>Ultimate binding</b><span>Empty until the act boss is defeated</span></div>
+      <div class="bound-summary"><b>Arcane Dart</b><span>Repeatable cantrip</span><b>Runic Bulwark</b><span>Once per battle</span></div>
     </div>`);
 }
 
