@@ -31,15 +31,15 @@ export const cards: Record<string, CardDefinition> = {
   },
   'lesser-ward': {
     id: 'lesser-ward', name: 'Lesser Ward', school: 'Warding', ap: 1, mana: 1,
-    target: 'self', rules: 'Gain 6 Ward.', art: '◇',
+    target: 'self', rules: 'Gain 8 Ward.', art: '◇',
   },
   'reactive-barrier': {
     id: 'reactive-barrier', name: 'Reactive Barrier', school: 'Warding', ap: 1, mana: 2,
-    target: 'self', rules: 'Gain 4 Ward. The first time you are attacked this turn, gain 4 more.', art: '◈',
+    target: 'self', rules: 'Gain 5 Ward. The first time you are attacked this turn, gain 5 more.', art: '◈',
   },
   'aegis-script': {
     id: 'aegis-script', name: 'Aegis Script', school: 'Warding', ap: 2, mana: 3,
-    target: 'self', rules: 'Gain 12 Ward. Retain.', retain: true, art: '⬡',
+    target: 'self', rules: 'Gain 14 Ward. Retain.', retain: true, art: '⬡',
   },
   'arcane-dart': {
     id: 'arcane-dart', name: 'Arcane Dart', school: 'Arcane', ap: 1, mana: 0,
@@ -60,14 +60,14 @@ export const startingDeck = [
 export const enemies: Record<string, EnemyDefinition> = {
   'grey-wolf': {
     id: 'grey-wolf', name: 'Grey Wolf', subtitle: 'Pack Hunter', maxHp: 24, color: '#8795a7', packHunter: true,
-    pattern: [{ kind: 'attack', label: 'Attack', amount: 5 }],
+    pattern: [{ kind: 'attack', label: 'Attack', amount: 4 }],
   },
   'prowling-wolf': {
     id: 'prowling-wolf', name: 'Prowling Wolf', subtitle: 'Patient predator', maxHp: 28, color: '#a98672', packHunter: true,
     pattern: [
       { kind: 'support', label: 'Preparing' },
-      { kind: 'attack', label: 'Pounce', amount: 11 },
-      { kind: 'attack', label: 'Attack', amount: 5 },
+      { kind: 'attack', label: 'Pounce', amount: 9 },
+      { kind: 'attack', label: 'Attack', amount: 4 },
     ],
   },
   'goblin-fighter': {
