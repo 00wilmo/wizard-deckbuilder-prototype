@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wizard Deckbuilder · Interface Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --void: #03070d;
+      --canvas: #070d16;
+      --navy: #0d1d32;
+      --navy-2: #152b45;
+      --navy-3: #243a52;
+      --gold: #d7b968;
+      --gold-bright: #f0d982;
+      --gold-soft: #927a42;
+      --paper: #efe0b9;
+      --paper-light: #f8eccb;
+      --ink: #172033;
+      --red: #b95043;
+      --red-bright: #ef786b;
+      --blue: #4fa9d9;
+      --blue-pale: #cfefff;
+      --green: #739665;
+      --muted: #aab9c6;
+      --border: #354a60;
+      --shadow: 0 22px 65px #000b;
+      font-family: "Crimson Pro", Georgia, serif;
+      background: var(--void);
+      color: #f4edd8;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--void); }
+    body { min-height: 100vh; margin: 0; background: radial-gradient(circle at 50% -10%, #1b3552 0, transparent 34%), var(--void); }
+    button { font: inherit; }
+    button:focus-visible { outline: 2px solid #fff3ad; outline-offset: 3px; }
+
+    .lab-shell { min-height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+    .lab-bar {
+      position: sticky; top: 0; z-index: 50;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center;
+      min-height: 76px; padding: 10px 18px;
+      background: #050a11f2; border-bottom: 1px solid #2b4055; box-shadow: 0 8px 30px #0009;
+      backdrop-filter: blur(16px);
+    }
+    .lab-brand { min-width: 230px; }
+    .lab-brand small, .eyebrow {
+      display: block; color: var(--gold); font: 700 9px "Cinzel"; letter-spacing: .17em; text-transform: uppercase;
+    }
+    .lab-brand b { display: block; margin-top: 2px; font: 700 15px "Cinzel"; letter-spacing: .04em; }
+    .lab-tabs { display: flex; justify-content: center; gap: 6px; overflow-x: auto; padding: 4px; }
+    .lab-tab, .viewport-button {
+      min-height: 38px; padding: 7px 12px; color: #9fb0bf; white-space: nowrap;
+      background: #0b1724; border: 1px solid #2d4257; border-radius: 4px; cursor: pointer;
+      font: 600 10px "Cinzel"; letter-spacing: .045em; transition: .15s;
+    }
+    .lab-tab:hover, .viewport-button:hover { color: #f6e9c3; border-color: #6a7f90; }
+    .lab-tab.active, .viewport-button.active { color: #151b24; background: linear-gradient(#efd985, #b99445); border-color: #ffe89f; }
+    .viewport-controls { display: flex; gap: 5px; }
+
+    .workspace { padding: 28px; overflow: hidden; }
+    .workspace-inner {
+      width: min(1480px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start;
+    }
+    .preview-stage {
+      min-width: 0; overflow: auto; padding: 14px;
+      background: #02050a; border: 1px solid #26394d; border-radius: 8px; box-shadow: var(--shadow);
+    }
+    .viewport {
+      width: 100%; min-width: 920px; min-height: 770px; overflow: hidden; margin: 0 auto;
+      background: var(--canvas); border: 1px solid #526071; border-radius: 5px;
+      box-shadow: 0 0 0 5px #0b111a, 0 20px 70px #000;
+      transition: width .25s ease, min-width .25s ease;
+    }
+    .preview-stage.mobile-preview .viewport { width: 430px; min-width: 430px; }
+
+    .notes-panel {
+      position: sticky; top: 104px; padding: 18px; background: linear-gradient(150deg, #0e1d2d, #070d16);
+      border: 1px solid #344b61; border-radius: 7px; box-shadow: 0 14px 40px #0008;
+    }
+    .notes-panel h2 { margin: 5px 0 10px; color: #f1dfad; font: 600 18px "Cinzel"; }
+    .notes-panel p { color: #a6b5c0; line-height: 1.25; }
+    .notes-panel ol { padding-left: 20px; color: #c0cbd1; }
+    .notes-panel li { margin: 9px 0; line-height: 1.18; }
+    .notes-panel .status {
+      margin-top: 16px; padding: 10px; color: #9bd8ad; background: #11251a; border: 1px solid #385e43; border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .game-screen { display: none; min-height: 770px; background: var(--canvas); }
+    .game-screen.active { display: flex; flex-direction: column; }
+    .game-header {
+      min-height: 78px; display: flex; justify-content: space-between; align-items: center; gap: 18px;
+      padding: 12px 22px; border-bottom: 1px solid #344b60;
+      background: linear-gradient(90deg, #08121e, #10253a 50%, #08121e);
+    }
+    .game-header h1 { margin: 3px 0 0; color: #f3e4bd; font: 600 23px "Cinzel"; }
+    .resource-strip { display: flex; gap: 7px; }
+    .resource-chip {
+      min-width: 78px; padding: 7px 10px; background: #07111c; border: 1px solid #3a5166; border-radius: 4px; text-align: center;
+    }
+    .resource-chip b { display: block; color: #ead173; font-size: 17px; }
+    .resource-chip small { color: #7f93a3; font: 600 8px "Cinzel"; letter-spacing: .08em; }
+    .resource-chip.health b { color: #ee8a7e; }
+    .resource-chip.mana b { color: #79c9ef; }
+
+    .screen-body { flex: 1; position: relative; padding: 22px; }
+    .scene-backdrop::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse at 20% 15%, #47704f28, transparent 27%),
+        radial-gradient(ellipse at 82% 30%, #335b6d24, transparent 30%),
+        linear-gradient(#0e2025e8, #071119f2),
+        repeating-linear-gradient(78deg, #18352e 0 2px, transparent 2px 90px);
+    }
+    .screen-content { position: relative; z-index: 1; }
+    .section-title { margin-bottom: 16px; text-align: center; }
+    .section-title h2 { margin: 5px 0; color: #f0dfaf; font: 600 28px "Cinzel"; }
+    .section-title p { max-width: 680px; margin: 0 auto; color: #a9bac5; font-size: 17px; }
+
+    .panel {
+      background: linear-gradient(145deg, #0f2133f2, #070f19f2); border: 1px solid #3b5369; border-radius: 6px; box-shadow: 0 14px 38px #0008;
+    }
+    .panel-heading { display: flex; justify-content: space-between; align-items: end; gap: 12px; padding: 14px 16px 10px; border-bottom: 1px solid #2e455a; }
+    .panel-heading h3 { margin: 2px 0; color: #ecdcae; font: 600 17px "Cinzel"; }
+    .panel-heading p { margin: 0; color: #8296a7; }
+
+    .primary-button, .secondary-button, .danger-button {
+      min-height: 42px; padding: 9px 16px; border-radius: 4px; cursor: pointer;
+      font: 700 11px "Cinzel"; letter-spacing: .055em; transition: .15s;
+    }
+    .primary-button { color: #141a22; background: linear-gradient(#f1db86, #b69142); border: 1px solid #ffe9a5; }
+    .primary-button:hover:not(:disabled) { filter: brightness(1.12); transform: translateY(-1px); }
+    .secondary-button { color: #e7dcc0; background: #132438; border: 1px solid #526a80; }
+    .secondary-button:hover:not(:disabled) { border-color: #d2b75f; background: #1b3046; }
+    .danger-button { color: #ffd7d0; background: #3c1818; border: 1px solid #984d43; }
+    button:disabled { opacity: .42; filter: grayscale(.6); cursor: not-allowed; transform: none !important; }
+
+    .card-row { display: flex; gap: 13px; justify-content: center; align-items: flex-start; padding: 18px; overflow-x: auto; }
+    .spell-card {
+      position: relative; width: 176px; min-width: 176px; height: 286px; display: grid;
+      grid-template-rows: 38px 92px 31px 1fr 25px; padding: 0; overflow: hidden;
+      color: var(--ink); background: var(--paper); border: 3px solid #c5a857; border-radius: 9px 9px 4px 4px;
+      box-shadow: 0 9px 20px #000a, inset 0 0 0 2px #182a40; cursor: pointer;
+      transition: transform .15s, box-shadow .15s, filter .15s;
+    }
+    .spell-card:hover:not(:disabled), .spell-card.selected { transform: translateY(-8px); box-shadow: 0 14px 26px #000d, 0 0 0 2px #fff1a2; }
+    .spell-card.selected::after { content: "SELECTED"; position: absolute; right: 7px; top: 43px; padding: 4px 6px; color: #172033; background: #f2d778; border: 1px solid #fff1ad; font: 700 8px "Cinzel"; }
+    .card-title { display: grid; place-items: center; padding: 4px; color: #f4e7bf; background: #132943; border-bottom: 1px solid #d5b861; font: 600 11px "Cinzel"; text-align: center; }
+    .card-art { display: grid; place-items: center; color: #cfefff; font-size: 48px; text-shadow: 0 0 22px currentColor; background: radial-gradient(circle, #255379, #0b1829 68%); }
+    .school-evocation .card-art { color: #ff9e6f; background: radial-gradient(circle, #71372e, #171524 70%); }
+    .school-warding .card-art { color: #f5dd7c; background: radial-gradient(circle, #4b4c4a, #141926 70%); }
+    .school-restoration .card-art { color: #b5e39b; background: radial-gradient(circle, #355e42, #121d1b 70%); }
+    .school-augury .card-art { color: #d6b6ff; background: radial-gradient(circle, #4b3567, #161323 70%); }
+    .school-thanaturgy .card-art { color: #dda7bf; background: radial-gradient(circle, #562e45, #161018 70%); }
+    .cost-row { display: grid; grid-template-columns: 1fr 1fr; background: #e7d5a9; border-block: 1px solid #9f844b; }
+    .cost-row b { display: grid; place-items: center; font: 600 10px "Cinzel"; }
+    .cost-row b:first-child { color: #7b2d27; border-right: 1px solid #9f844b; }
+    .cost-row b:last-child { color: #154f72; }
+    .card-rules { display: grid; place-items: center; padding: 8px 10px; font-size: 14px; line-height: 1.05; text-align: center; background-image: linear-gradient(#ffffff1c 1px, transparent 1px); background-size: 100% 16px; }
+    .card-school { display: grid; place-items: center; color: #e8d7ac; background: #132943; font: 600 9px "Cinzel"; letter-spacing: .08em; }
+
+    /* Shop */
+    .shop-layout { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; }
+    .shop-main { display: grid; gap: 14px; }
+    .shopkeeper { min-height: 108px; display: grid; grid-template-columns: 82px 1fr; gap: 15px; align-items: center; padding: 14px; }
+    .merchant-sigil {
+      width: 78px; height: 78px; display: grid; place-items: center; border: 1px solid #8d7640; border-radius: 50%;
+      color: #f0d478; background: radial-gradient(circle, #3b321d, #0b1721 70%); font-size: 34px; box-shadow: inset 0 0 22px #000;
+    }
+    .shopkeeper blockquote { margin: 5px 0; color: #ced5d6; font-size: 18px; font-style: italic; }
+    .shopkeeper cite { color: #7f93a3; font-style: normal; }
+    .shop-inventory { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; padding: 12px; }
+    .wares-card {
+      display: grid; grid-template-columns: 62px 1fr; gap: 10px; min-height: 94px; padding: 10px; text-align: left;
+      color: #e9dfc4; background: #0b1826; border: 1px solid #38516a; border-radius: 5px; cursor: pointer;
+    }
+    .wares-card:hover, .wares-card.selected { border-color: var(--gold); background: #142438; box-shadow: 0 0 18px #d7b96818; }
+    .wares-icon { display: grid; place-items: center; color: #e5ca71; background: #211d13; border: 1px solid #66582e; font-size: 28px; }
+    .wares-card b { font: 600 12px "Cinzel"; }
+    .wares-card p { margin: 5px 0; color: #9dafbd; line-height: 1.05; }
+    .price { color: #e6c969; font-weight: 600; }
+    .shop-sidebar { display: flex; flex-direction: column; gap: 12px; }
+    .service-list { padding: 10px; }
+    .service {
+      width: 100%; margin: 5px 0; padding: 12px; color: #d8dfdc; text-align: left; background: #0a1723; border: 1px solid #314a5f; border-radius: 4px; cursor: pointer;
+    }
+    .service:hover, .service.selected { border-color: #d0b65e; background: #152536; }
+    .service b { display: block; color: #eadba8; font: 600 11px "Cinzel"; }
+    .service small { color: #8da0ad; }
+    .purchase-bar { display: grid; gap: 10px; padding: 14px; text-align: center; }
+    .purchase-bar strong { color: #f0d77d; font: 600 15px "Cinzel"; }
+
+    /* Research */
+    .research-chamber { min-height: 690px; background: radial-gradient(circle at 50% 42%, #24506655, transparent 31%), linear-gradient(#0a1723e8, #050a11f5); }
+    .research-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; max-width: 1000px; margin: 22px auto; }
+    .research-choice {
+      min-height: 360px; display: flex; flex-direction: column; padding: 18px; color: #e8dec3; text-align: left;
+      background: linear-gradient(#10263aeb, #07111ceb); border: 1px solid #405d75; border-radius: 7px; cursor: pointer; transition: .18s;
+    }
+    .research-choice:hover, .research-choice.selected { transform: translateY(-6px); border-color: #e1c86e; box-shadow: 0 18px 44px #000b, 0 0 28px #5bc6ed1c; }
+    .research-choice.selected { background: linear-gradient(#18334a, #0b1724); }
+    .research-rune { width: 92px; height: 92px; display: grid; place-items: center; margin: 5px auto 16px; color: #9ee8ff; border: 1px solid #507a93; border-radius: 50%; background: radial-gradient(circle, #28586b, #091722 70%); font-size: 43px; text-shadow: 0 0 18px currentColor; }
+    .research-choice:nth-child(2) .research-rune { color: #efd67c; border-color: #8e7b40; background: radial-gradient(circle, #514a27, #15150f 70%); }
+    .research-choice:nth-child(3) .research-rune { color: #d9a9ff; border-color: #76548e; background: radial-gradient(circle, #4b3260, #14101c 70%); }
+    .research-choice h3 { margin: 0; color: #f0dfac; font: 600 17px "Cinzel"; text-align: center; }
+    .research-choice > p { flex: 1; color: #a9bac6; line-height: 1.2; }
+    .result-preview { padding: 11px; color: #cbd5d9; background: #060d15; border: 1px solid #2d4355; border-radius: 4px; }
+    .result-preview b { display: block; margin-bottom: 4px; color: #84d4f4; }
+    .research-footer { display: flex; justify-content: center; gap: 10px; }
+
+    /* Rest */
+    .rest-clearing { min-height: 690px; background: radial-gradient(circle at 50% 82%, #e89e3c33, transparent 24%), linear-gradient(#0a171ce6, #060b10f5); }
+    .rest-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; max-width: 1060px; margin: 22px auto; }
+    .rest-menu { padding: 11px; align-self: start; }
+    .rest-action {
+      width: 100%; min-height: 104px; margin: 5px 0; padding: 13px; color: #e8dfc7; text-align: left;
+      background: #0a1722; border: 1px solid #344d61; border-radius: 5px; cursor: pointer;
+    }
+    .rest-action:hover, .rest-action.selected { border-color: #d6bb62; background: #17283a; }
+    .rest-action b { display: block; color: #f0dca2; font: 600 14px "Cinzel"; }
+    .rest-action span { color: #91a5b2; }
+    .rest-content { min-height: 430px; padding: 18px; }
+    .rest-view { display: none; }
+    .rest-view.active { display: block; }
+    .heal-display { min-height: 360px; display: grid; place-items: center; text-align: center; }
+    .campfire { color: #ffb25d; font-size: 95px; text-shadow: 0 0 42px #d75a2c; }
+    .heal-display h3 { margin: 8px 0; color: #f2dfad; font: 600 22px "Cinzel"; }
+    .heal-display p { color: #a9b9c2; font-size: 18px; }
+    .upgrade-layout { display: grid; grid-template-columns: 190px 1fr; gap: 18px; align-items: center; }
+    .mini-spell { transform: scale(.94); transform-origin: center; }
+    .branch-list { display: grid; gap: 12px; }
+    .upgrade-branch {
+      min-height: 122px; padding: 14px; color: #dfd8c3; text-align: left;
+      background: #0a1723; border: 1px solid #3e576e; border-radius: 5px; cursor: pointer;
+    }
+    .upgrade-branch:hover, .upgrade-branch.selected { border-color: #ebce6e; background: #192b3c; }
+    .upgrade-branch small { color: #e5c965; font: 600 9px "Cinzel"; letter-spacing: .1em; }
+    .upgrade-branch b { display: block; margin: 5px 0; color: #f3e3bb; font: 600 14px "Cinzel"; }
+    .upgrade-branch span { color: #a7b7c2; }
+
+    /* Rewards */
+    .reward-hall { min-height: 690px; background: radial-gradient(circle at 50% 30%, #385e6144, transparent 32%), linear-gradient(#0a1720ec, #050a10f8); }
+    .reward-actions { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+    .reward-note { text-align: center; color: #8498a7; }
+
+    /* Boss reward */
+    .golem-vault { min-height: 690px; background: radial-gradient(circle at 50% 20%, #c68e4020, transparent 32%), linear-gradient(#151716ec, #050708fa); }
+    .victory-ribbon {
+      display: flex; justify-content: center; gap: 32px; margin: 0 auto 16px; padding: 9px 18px; max-width: 720px;
+      color: #cfddcf; background: #10251a; border: 1px solid #46684a; border-radius: 4px;
+    }
+    .victory-ribbon b { color: #8fd09c; }
+    .ultimate-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; max-width: 1010px; margin: 0 auto; }
+    .ultimate-offer {
+      min-height: 390px; display: flex; flex-direction: column; padding: 0; overflow: hidden; color: #ede4cb; text-align: left;
+      background: linear-gradient(#171f2a, #090d13); border: 2px solid #765f31; border-radius: 7px; cursor: pointer; box-shadow: 0 15px 42px #000a; transition: .18s;
+    }
+    .ultimate-offer:hover, .ultimate-offer.selected { transform: translateY(-7px); border-color: #f0cf6e; box-shadow: 0 22px 50px #000c, 0 0 32px #dcad422b; }
+    .ultimate-art {
+      height: 160px; display: grid; place-items: center; color: #f0d477; font-size: 72px;
+      background: radial-gradient(circle, #715c2c, #111720 67%); text-shadow: 0 0 28px currentColor;
+    }
+    .ultimate-offer:nth-child(2) .ultimate-art { color: #ff866c; background: radial-gradient(circle, #73372c, #171017 67%); }
+    .ultimate-offer:nth-child(3) .ultimate-art { color: #cb97e6; background: radial-gradient(circle, #563565, #130f19 67%); }
+    .ultimate-copy { flex: 1; display: flex; flex-direction: column; padding: 15px; }
+    .ultimate-copy h3 { margin: 4px 0 8px; color: #f2dfaa; font: 600 17px "Cinzel"; }
+    .ultimate-copy p { flex: 1; color: #aebbc3; line-height: 1.18; }
+    .ultimate-cost { display: flex; justify-content: space-between; gap: 7px; color: #e6cf82; font: 600 10px "Cinzel"; }
+    .fixed-tag { align-self: flex-start; padding: 4px 6px; color: #14202b; background: #e4c86b; font: 700 8px "Cinzel"; letter-spacing: .08em; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; z-index: 100; transform: translate(-50%, 25px); opacity: 0;
+      padding: 11px 17px; color: #fff2c6; background: #241b10f2; border: 1px solid var(--gold); border-radius: 4px;
+      box-shadow: 0 12px 34px #000b; pointer-events: none; transition: .22s;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+    .preview-stage.mobile-preview .game-header { align-items: flex-start; padding: 11px; }
+    .preview-stage.mobile-preview .game-header h1 { font-size: 17px; }
+    .preview-stage.mobile-preview .resource-strip { gap: 3px; }
+    .preview-stage.mobile-preview .resource-chip { min-width: 52px; padding: 5px 4px; }
+    .preview-stage.mobile-preview .screen-body { padding: 12px; }
+    .preview-stage.mobile-preview .section-title h2 { font-size: 23px; }
+    .preview-stage.mobile-preview .shop-layout,
+    .preview-stage.mobile-preview .rest-layout { grid-template-columns: 1fr; }
+    .preview-stage.mobile-preview .shop-inventory,
+    .preview-stage.mobile-preview .research-options,
+    .preview-stage.mobile-preview .ultimate-row { grid-template-columns: 1fr; }
+    .preview-stage.mobile-preview .research-choice { min-height: 280px; }
+    .preview-stage.mobile-preview .ultimate-offer { min-height: 340px; }
+    .preview-stage.mobile-preview .card-row { justify-content: flex-start; }
+    .preview-stage.mobile-preview .upgrade-layout { grid-template-columns: 1fr; }
+    .preview-stage.mobile-preview .mini-spell { margin: 0 auto; }
+    .preview-stage.mobile-preview .victory-ribbon { gap: 8px; font-size: 13px; }
+
+    @media (max-width: 1050px) {
+      .lab-bar { grid-template-columns: 1fr auto; }
+      .lab-tabs { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; }
+      .workspace { padding: 14px; }
+      .workspace-inner { grid-template-columns: 1fr; }
+      .notes-panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab-shell">
+    <header class="lab-bar">
+      <div class="lab-brand">
+        <small>Wizard Deckbuilder · v0.5</small>
+        <b>INTERFACE LAB</b>
+      </div>
+      <nav class="lab-tabs" aria-label="Prototype screens">
+        <button class="lab-tab active" data-screen="shop">1 · Shop</button>
+        <button class="lab-tab" data-screen="research">2 · Research</button>
+        <button class="lab-tab" data-screen="rest">3 · Rest / Upgrade</button>
+        <button class="lab-tab" data-screen="reward">4 · Spell Reward</button>
+        <button class="lab-tab" data-screen="ultimate">5 · Ultimate Reward</button>
+      </nav>
+      <div class="viewport-controls" aria-label="Preview size">
+        <button class="viewport-button active" data-viewport="desktop">Desktop</button>
+        <button class="viewport-button" data-viewport="mobile">Mobile</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="workspace-inner">
+        <div class="preview-stage" id="preview-stage">
+          <div class="viewport">
+            <section class="game-screen active" data-screen-panel="shop">
+              <header class="game-header">
+                <div><span class="eyebrow">Forest crossroads · shop</span><h1>The Wayward Ledger</h1></div>
+                <div class="resource-strip">
+                  <span class="resource-chip health"><b>46/70</b><small>Health</small></span>
+                  <span class="resource-chip mana"><b>9/12</b><small>Mana</small></span>
+                  <span class="resource-chip"><b id="shop-gold">142</b><small>Gold</small></span>
+                </div>
+              </header>
+              <div class="screen-body scene-backdrop">
+                <div class="screen-content shop-layout">
+                  <div class="shop-main">
+                    <section class="panel shopkeeper">
+                      <div class="merchant-sigil">⚖</div>
+                      <div>
+                        <span class="eyebrow">Orren, itinerant scrivener</span>
+                        <blockquote>“A spell forgotten is sometimes worth more than one learned.”</blockquote>
+                        <cite>Inventory refreshes whenever this node appears in a new run.</cite>
+                      </div>
+                    </section>
+                    <section class="panel">
+                      <div class="panel-heading"><div><span class="eyebrow">Three uncommon leaves</span><h3>Spells for Sale</h3></div><p>One copy only</p></div>
+                      <div class="card-row">
+                        <button class="spell-card school-augury shop-item" data-price="74" data-item="Foreseen Step">
+                          <span class="card-title">Foreseen Step</span><span class="card-art">◉</span>
+                          <span class="cost-row"><b>1 AP</b><b>2 MANA</b></span>
+                          <span class="card-rules">Draw 2. Retain one spell in your hand this turn.</span><span class="card-school">AUGURY</span>
+                        </button>
+                        <button class="spell-card school-warding shop-item" data-price="62" data-item="Patient Aegis">
+                          <span class="card-title">Patient Aegis</span><span class="card-art">⬡</span>
+                          <span class="cost-row"><b>1 AP</b><b>2 MANA</b></span>
+                          <span class="card-rules">Gain 7 Ward. If unbroken, gain 4 Ward next turn.</span><span class="card-school">WARDING</span>
+                        </button>
+                        <button class="spell-card school-restoration shop-item" data-price="88" data-item="Mend the Thread">
+                          <span class="card-title">Mend the Thread</span><span class="card-art">✦</span>
+                          <span class="cost-row"><b>2 AP</b><b>4 MANA</b></span>
+                          <span class="card-rules">Heal 9. Exhaust.</span><span class="card-school">RESTORATION</span>
+                        </button>
+                      </div>
+                    </section>
+                    <section class="panel">
+                      <div class="panel-heading"><div><span class="eyebrow">Relics · choose carefully</span><h3>Curios</h3></div><p>Relics are rarer and expensive</p></div>
+                      <div class="shop-inventory">
+                        <button class="wares-card shop-item" data-price="105" data-item="Brass Bookmark"><span class="wares-icon">⌑</span><span><b>Brass Bookmark</b><p>The first retained spell each combat costs 1 less Mana.</p><span class="price">105 Gold</span></span></button>
+                        <button class="wares-card shop-item" data-price="95" data-item="Wolfglass Phial"><span class="wares-icon">◊</span><span><b>Wolfglass Phial</b><p>Start elite battles with 5 Ward.</p><span class="price">95 Gold</span></span></button>
+                        <button class="wares-card shop-item" data-price="112" data-item="Borrowed Seal"><span class="wares-icon">✣</span><span><b>Borrowed Seal</b><p>Your first inscription each run costs no Gold.</p><span class="price">112 Gold</span></span></button>
+                      </div>
+                    </section>
+                  </div>
+                  <aside class="shop-sidebar">
+                    <section class="panel">
+                      <div class="panel-heading"><div><span class="eyebrow">Services</span><h3>Edit the Spellbook</h3></div></div>
+                      <div class="service-list">
+                        <button class="service" data-service="forget"><b>Forget a Spell · 55 Gold</b><small>Permanently remove one normal spell.</small></button>
+                        <button class="service" data-service="inscribe"><b>Minor Inscription · 70 Gold</b><small>Add +2 damage to an eligible spell.</small></button>
+                        <button class="service" data-service="leave"><b>Leave the Shop</b><small>Return to the forest map.</small></button>
+                      </div>
+                    </section>
+                    <section class="panel purchase-bar">
+                      <span class="eyebrow">Selected item</span>
+                      <strong id="shop-selection">Nothing selected</strong>
+                      <span id="shop-price">Select a spell, relic, or service.</span>
+                      <button class="primary-button" id="buy-button" disabled>Purchase</button>
+                    </section>
+                  </aside>
+                </div>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen-panel="research">
+              <header class="game-header">
+                <div><span class="eyebrow">Research node · choose one</span><h1>The Standing Observatory</h1></div>
+                <div class="resource-strip">
+                  <span class="resource-chip health"><b>46/70</b><small>Health</small></span>
+                  <span class="resource-chip mana"><b>12/12</b><small>Mana restored</small></span>
+                </div>
+              </header>
+              <div class="screen-body research-chamber">
+                <div class="screen-content">
+                  <div class="section-title"><span class="eyebrow">A single night of study remains</span><h2>Choose the Subject</h2><p>Research always restores all Mana. Only one discovery can be completed at each research node.</p></div>
+                  <div class="research-options" data-choice-group>
+                    <button class="research-choice" data-choice="Refine Arcane Dart">
+                      <span class="research-rune">✧</span><span class="eyebrow">Cantrip study</span><h3>Refine Arcane Dart</h3>
+                      <p>Make the bound cantrip more useful without putting it into the draw pile.</p>
+                      <span class="result-preview"><b>Choose an upgrade</b>Sharper Dart: deal 5 damage<br>Threading Dart: deal 3 and ignore Armor</span>
+                    </button>
+                    <button class="research-choice" data-choice="Recover an Inscription">
+                      <span class="research-rune">⌁</span><span class="eyebrow">Rune study</span><h3>Recover an Inscription</h3>
+                      <p>Add a permanent modifier to one spell. Identical inscriptions can stack within its three slots.</p>
+                      <span class="result-preview"><b>Quickened Script</b>One chosen spell costs 1 less AP. Advanced inscriptions remain rare.</span>
+                    </button>
+                    <button class="research-choice" data-choice="Trace the Bound Pattern" disabled>
+                      <span class="research-rune">◈</span><span class="eyebrow">Ultimate study</span><h3>Trace the Bound Pattern</h3>
+                      <p>Upgrade the equipped ultimate. Unavailable until an ultimate has been learned.</p>
+                      <span class="result-preview"><b>Currently unavailable</b>No ultimate is bound during Act I before the golem is defeated.</span>
+                    </button>
+                  </div>
+                  <div class="research-footer"><button class="secondary-button" data-demo-back>Return to Map</button><button class="primary-button confirm-choice" disabled>Begin Research</button></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen-panel="rest">
+              <header class="game-header">
+                <div><span class="eyebrow">Rest node · choose one</span><h1>A Fire Beneath the Cedars</h1></div>
+                <div class="resource-strip">
+                  <span class="resource-chip health"><b>46/70</b><small>Health</small></span>
+                  <span class="resource-chip mana"><b>12/12</b><small>Mana restored</small></span>
+                </div>
+              </header>
+              <div class="screen-body rest-clearing">
+                <div class="screen-content">
+                  <div class="section-title"><span class="eyebrow">The forest is quiet—for now</span><h2>How Will You Spend the Night?</h2><p>Mana is always fully restored here. Choose either recovery or one branching spell upgrade.</p></div>
+                  <div class="rest-layout">
+                    <aside class="panel rest-menu">
+                      <button class="rest-action selected" data-rest-view="heal"><b>Rest</b><span>Recover 18 Health.</span></button>
+                      <button class="rest-action" data-rest-view="upgrade"><b>Revise a Spell</b><span>Choose one of its two upgrade paths.</span></button>
+                      <button class="secondary-button" style="width:100%; margin-top:8px" data-demo-back>Leave</button>
+                    </aside>
+                    <section class="panel rest-content">
+                      <div class="rest-view active" data-rest-panel="heal">
+                        <div class="heal-display">
+                          <div><div class="campfire">♨</div><h3>Set the Spellbook Aside</h3><p>46 → <b style="color:#8fd09c">64 Health</b><br>Mana is already fully restored.</p><button class="primary-button demo-confirm" data-message="Rest selected. Health would be restored to 64.">Rest Until Dawn</button></div>
+                        </div>
+                      </div>
+                      <div class="rest-view" data-rest-panel="upgrade">
+                        <div class="upgrade-layout">
+                          <button class="spell-card school-warding mini-spell">
+                            <span class="card-title">Brace the Line</span><span class="card-art">⬢</span>
+                            <span class="cost-row"><b>1 AP</b><b>2 MANA</b></span>
+                            <span class="card-rules">Gain 7 Ward.</span><span class="card-school">WARDING</span>
+                          </button>
+                          <div class="branch-list" data-choice-group>
+                            <button class="upgrade-branch" data-choice="Deep Foundation"><small>PATH A · CAPACITY</small><b>Deep Foundation</b><span>Gain 11 Ward instead. Straightforward and immediately reliable.</span></button>
+                            <button class="upgrade-branch" data-choice="Living Rampart"><small>PATH B · ENGINE</small><b>Living Rampart</b><span>Gain 7 Ward. If none breaks this turn, draw 1 next turn.</span></button>
+                            <button class="primary-button confirm-choice" disabled>Revise Spell</button>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen-panel="reward">
+              <header class="game-header">
+                <div><span class="eyebrow">Battle complete · spell discovery</span><h1>Knowledge Taken From Conflict</h1></div>
+                <div class="resource-strip">
+                  <span class="resource-chip health"><b>39/70</b><small>Health</small></span>
+                  <span class="resource-chip mana"><b>8/12</b><small>Mana</small></span>
+                  <span class="resource-chip"><b>+18</b><small>Gold</small></span>
+                </div>
+              </header>
+              <div class="screen-body reward-hall">
+                <div class="screen-content">
+                  <div class="section-title"><span class="eyebrow">Victory reveals three possibilities</span><h2>Commit One Spell to Memory</h2><p>The wizard cannot normally keep duplicates. Take one spell or leave all three behind.</p></div>
+                  <div class="card-row reward-card-row" data-choice-group>
+                    <button class="spell-card school-evocation" data-choice="Cinderwake">
+                      <span class="card-title">Cinderwake</span><span class="card-art">⌁</span>
+                      <span class="cost-row"><b>1 AP</b><b>2 MANA</b></span>
+                      <span class="card-rules">Deal 4 damage to 1–4 enemies. Apply 1 Burning to each.</span><span class="card-school">EVOCATION</span>
+                    </button>
+                    <button class="spell-card school-warding" data-choice="Mirror Ward">
+                      <span class="card-title">Mirror Ward</span><span class="card-art">◇</span>
+                      <span class="cost-row"><b>1 AP</b><b>3 MANA</b></span>
+                      <span class="card-rules">Gain 6 Ward. The next attacker takes 3 damage.</span><span class="card-school">WARDING</span>
+                    </button>
+                    <button class="spell-card school-augury" data-choice="Borrowed Moment">
+                      <span class="card-title">Borrowed Moment</span><span class="card-art">◉</span>
+                      <span class="cost-row"><b>0 AP</b><b>3 MANA</b></span>
+                      <span class="card-rules">Draw 1. The next spell played this turn gains Retain.</span><span class="card-school">AUGURY</span>
+                    </button>
+                  </div>
+                  <p class="reward-note">Newly discovered schools are identified clearly here, without forcing a tutorial interruption.</p>
+                  <div class="reward-actions"><button class="secondary-button demo-confirm" data-message="All three spells skipped.">Skip All</button><button class="primary-button confirm-choice" disabled>Add to Spellbook</button></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="game-screen" data-screen-panel="ultimate">
+              <header class="game-header">
+                <div><span class="eyebrow">Act I complete · golem defeated</span><h1>The Engraved Core Opens</h1></div>
+                <div class="resource-strip">
+                  <span class="resource-chip health"><b>70/70</b><small>Fully healed</small></span>
+                  <span class="resource-chip mana"><b>12/12</b><small>Mana</small></span>
+                </div>
+              </header>
+              <div class="screen-body golem-vault">
+                <div class="screen-content">
+                  <div class="section-title"><span class="eyebrow">An ultimate may now be bound</span><h2>Choose One Engraving</h2><p>Runic Bulwark is guaranteed because it belongs to this boss. The other two offers are drawn from the unlocked ultimate pool.</p></div>
+                  <div class="victory-ribbon"><span><b>Act restored:</b> all Health and Mana</span><span><b>Ultimate rule:</b> once per battle</span></div>
+                  <div class="ultimate-row" data-choice-group>
+                    <button class="ultimate-offer" data-choice="Runic Bulwark">
+                      <div class="ultimate-art">⬢</div><div class="ultimate-copy"><span class="fixed-tag">GOLEM ENGRAVING</span><h3>Runic Bulwark</h3><p>Gain 18 Ward. For 3 turns, your Ward persists between turns.</p><span class="ultimate-cost"><b>2 AP</b><b>4 MANA</b><b>ONCE / BATTLE</b></span></div>
+                    </button>
+                    <button class="ultimate-offer" data-choice="Meteoric Sentence">
+                      <div class="ultimate-art">☄</div><div class="ultimate-copy"><span class="eyebrow">Evocation ultimate</span><h3>Meteoric Sentence</h3><p>Discard your hand. Deal 10 damage four times among all enemies and apply 3 Burning.</p><span class="ultimate-cost"><b>3 AP</b><b>8 MANA</b><b>ONCE / BATTLE</b></span></div>
+                    </button>
+                    <button class="ultimate-offer" data-choice="Memory Eater">
+                      <div class="ultimate-art">◌</div><div class="ultimate-copy"><span class="eyebrow">Forbidden ultimate</span><h3>Memory Eater</h3><p>Exhaust every spell in your hand. For each, draw one and reduce its Mana cost by 2 this combat.</p><span class="ultimate-cost"><b>2 AP</b><b>6 HEALTH</b><b>ONCE / BATTLE</b></span></div>
+                    </button>
+                  </div>
+                  <div class="reward-actions"><button class="primary-button confirm-choice" disabled>Bind Ultimate</button></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <aside class="notes-panel">
+          <span class="eyebrow">Review panel</span>
+          <h2 id="notes-title">Shop</h2>
+          <p id="notes-summary">A dense but readable merchant screen that makes spells the primary purchase and editing services secondary.</p>
+          <ol id="notes-list">
+            <li>Should spell prices appear directly on the cards?</li>
+            <li>Is forgetting a spell prominent enough?</li>
+            <li>Does the merchant need a larger illustrated portrait?</li>
+          </ol>
+          <div class="status">Everything here is isolated from the playable build. Interactions are demonstrations only.</div>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    var notes = {
+      shop: {
+        title: "Shop",
+        summary: "A dense but readable merchant screen that makes spells the primary purchase and editing services secondary.",
+        questions: ["Should spell prices appear directly on the cards?", "Is forgetting a spell prominent enough?", "Does the merchant need a larger illustrated portrait?"]
+      },
+      research: {
+        title: "Research",
+        summary: "Three mutually exclusive subjects make the node rule obvious before the player commits.",
+        questions: ["Should unavailable ultimate research be hidden or shown locked?", "Are the choices distinct enough at a glance?", "Should inscriptions preview several possible discoveries?"]
+      },
+      rest: {
+        title: "Rest / Upgrade",
+        summary: "Healing is immediate and calm; upgrading exposes the two branches before confirmation.",
+        questions: ["Is 18 Health an appropriate first-pass rest value?", "Should the full spellbook appear before this branch view?", "Does each upgrade path communicate a different build direction?"]
+      },
+      reward: {
+        title: "Post-battle Spell Reward",
+        summary: "The familiar three-card reward is framed as committing discovered knowledge to the spellbook.",
+        questions: ["Should the school-discovery moment receive more ceremony?", "Is Skip All too visually competitive with taking a spell?", "Do the cards need upgrade previews from this screen?"]
+      },
+      ultimate: {
+        title: "Boss / Ultimate Reward",
+        summary: "The fixed boss engraving is clearly identified while two random ultimates preserve run variety.",
+        questions: ["Should the boss ultimate be visually favored this strongly?", "Is the full-heal message prominent enough?", "Should this screen also allow equipping a previously learned ultimate?"]
+      }
+    };
+
+    var activeScreen = "shop";
+    var toastTimer = 0;
+    var toast = document.getElementById("toast");
+    var previewStage = document.getElementById("preview-stage");
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(function () { toast.classList.remove("visible"); }, 2300);
+    }
+
+    function updateNotes(screen) {
+      var data = notes[screen];
+      document.getElementById("notes-title").textContent = data.title;
+      document.getElementById("notes-summary").textContent = data.summary;
+      document.getElementById("notes-list").innerHTML = data.questions.map(function (question) { return "<li>" + question + "</li>"; }).join("");
+    }
+
+    document.querySelectorAll(".lab-tab").forEach(function (button) {
+      button.addEventListener("click", function () {
+        activeScreen = button.dataset.screen;
+        document.querySelectorAll(".lab-tab").forEach(function (item) { item.classList.toggle("active", item === button); });
+        document.querySelectorAll(".game-screen").forEach(function (panel) { panel.classList.toggle("active", panel.dataset.screenPanel === activeScreen); });
+        updateNotes(activeScreen);
+      });
+    });
+
+    document.querySelectorAll(".viewport-button").forEach(function (button) {
+      button.addEventListener("click", function () {
+        document.querySelectorAll(".viewport-button").forEach(function (item) { item.classList.toggle("active", item === button); });
+        previewStage.classList.toggle("mobile-preview", button.dataset.viewport === "mobile");
+      });
+    });
+
+    document.querySelectorAll("[data-choice-group]").forEach(function (group) {
+      var confirm = group.parentElement.querySelector(".confirm-choice") || group.nextElementSibling && group.nextElementSibling.querySelector(".confirm-choice") || group.querySelector(".confirm-choice");
+      group.querySelectorAll("[data-choice]").forEach(function (choice) {
+        choice.addEventListener("click", function () {
+          group.querySelectorAll("[data-choice]").forEach(function (item) { item.classList.toggle("selected", item === choice); });
+          if (confirm) {
+            confirm.disabled = false;
+            confirm.dataset.selectedChoice = choice.dataset.choice;
+          }
+        });
+      });
+    });
+
+    document.querySelectorAll(".confirm-choice").forEach(function (button) {
+      button.addEventListener("click", function () {
+        showToast((button.dataset.selectedChoice || "Choice") + " selected for this demonstration.");
+      });
+    });
+
+    var selectedShopItem = null;
+    var selectedShopPrice = 0;
+    var shopGold = 142;
+    var buyButton = document.getElementById("buy-button");
+    document.querySelectorAll(".shop-item").forEach(function (item) {
+      item.addEventListener("click", function () {
+        document.querySelectorAll(".shop-item, .service").forEach(function (node) { node.classList.remove("selected"); });
+        item.classList.add("selected");
+        selectedShopItem = item.dataset.item;
+        selectedShopPrice = Number(item.dataset.price);
+        document.getElementById("shop-selection").textContent = selectedShopItem;
+        document.getElementById("shop-price").textContent = selectedShopPrice + " Gold";
+        buyButton.disabled = selectedShopPrice > shopGold;
+      });
+    });
+    document.querySelectorAll(".service").forEach(function (service) {
+      service.addEventListener("click", function () {
+        if (service.dataset.service === "leave") {
+          showToast("This would return to the forest map.");
+          return;
+        }
+        document.querySelectorAll(".shop-item, .service").forEach(function (node) { node.classList.remove("selected"); });
+        service.classList.add("selected");
+        selectedShopItem = service.dataset.service === "forget" ? "Forget a Spell" : "Minor Inscription";
+        selectedShopPrice = service.dataset.service === "forget" ? 55 : 70;
+        document.getElementById("shop-selection").textContent = selectedShopItem;
+        document.getElementById("shop-price").textContent = selectedShopPrice + " Gold";
+        buyButton.disabled = selectedShopPrice > shopGold;
+      });
+    });
+    buyButton.addEventListener("click", function () {
+      if (!selectedShopItem || selectedShopPrice > shopGold) return;
+      shopGold -= selectedShopPrice;
+      document.getElementById("shop-gold").textContent = String(shopGold);
+      showToast(selectedShopItem + " purchased. This does not affect your run.");
+      selectedShopItem = null;
+      selectedShopPrice = 0;
+      buyButton.disabled = true;
+      document.getElementById("shop-selection").textContent = "Nothing selected";
+      document.getElementById("shop-price").textContent = "Select a spell, relic, or service.";
+      document.querySelectorAll(".shop-item, .service").forEach(function (node) { node.classList.remove("selected"); });
+    });
+
+    document.querySelectorAll(".rest-action").forEach(function (button) {
+      button.addEventListener("click", function () {
+        document.querySelectorAll(".rest-action").forEach(function (item) { item.classList.toggle("selected", item === button); });
+        document.querySelectorAll(".rest-view").forEach(function (panel) { panel.classList.toggle("active", panel.dataset.restPanel === button.dataset.restView); });
+      });
+    });
+
+    document.querySelectorAll(".demo-confirm").forEach(function (button) {
+      button.addEventListener("click", function () { showToast(button.dataset.message); });
+    });
+    document.querySelectorAll("[data-demo-back]").forEach(function (button) {
+      button.addEventListener("click", function () { showToast("This would return to the forest map."); });
+    });
+  </script>
+</body>
+</html>
